@@ -1,28 +1,22 @@
-# from turtle import distance
+from dataclasses import dataclass
+from typing import List
 
 
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-
-    def __init__(self,
-                 training_type: str,
-                 duration: float,
-                 distance: float,
-                 speed: float,
-                 calories: float
-                 ) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    training_type: str
+    duration: float
+    distance: float
+    speed: float
+    calories: float
 
     def get_message(self) -> str:
         return (f'Тип тренировки: {self.training_type}; '
-                + f'Длительность: {self.duration:.3f} ч.; '
-                + f'Дистанция: {self.distance:.3f} км; '
-                + f'Ср. скорость: {self.speed:.3f} км/ч; '
-                + f'Потрачено ккал: {self.calories:.3f}.')
+                f'Длительность: {self.duration:.3f} ч.; '
+                f'Дистанция: {self.distance:.3f} км; '
+                f'Ср. скорость: {self.speed:.3f} км/ч; '
+                f'Потрачено ккал: {self.calories:.3f}.')
 
 
 class Training:
@@ -49,7 +43,7 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        pass
+        return 0.0
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -69,13 +63,15 @@ class Running(Training):
                  weight: float
                  ) -> None:
         super().__init__(action, duration, weight)
-        self.coeff_calorie_1 = 18
-        self.coeff_calorie_2 = 20
 
     def get_spent_calories(self) -> float:
-        return ((self.coeff_calorie_1 * self.get_mean_speed()
-                - self.coeff_calorie_2)
-                * self.weight) / self.M_IN_KM * self.duration * 60
+        CONST_COEFF_MULTIPLIER = 18
+        CONST_COEFF_DEDUCTIBLE = 20
+        MIN_IN_HOUR = 60
+
+        return ((CONST_COEFF_MULTIPLIER * self.get_mean_speed()
+                - CONST_COEFF_DEDUCTIBLE)
+                * self.weight) / self.M_IN_KM * self.duration * MIN_IN_HOUR
 
 
 class SportsWalking(Training):
@@ -91,11 +87,17 @@ class SportsWalking(Training):
         self.height = height
 
     def get_spent_calories(self) -> float:
-        return ((0.035
+        CONST_COEFF_MULTIPLIABLE = 0.035
+        CONST_COEFF_MULTIPLIER = 0.029
+        MIN_IN_HOUR = 60
+
+        return ((CONST_COEFF_MULTIPLIABLE
                  * self.weight
                  + (self.get_mean_speed()**2 // self.height)
-                 * 0.029 * self.weight)
-                * self.duration * 60)
+                 * CONST_COEFF_MULTIPLIER
+                 * self.weight)
+                * self.duration
+                * MIN_IN_HOUR)
 
 
 class Swimming(Training):
@@ -120,17 +122,25 @@ class Swimming(Training):
                 / self.duration)
 
     def get_spent_calories(self) -> float:
-        return (self.get_mean_speed() + 1.1) * 2 * self.weight
+        CONST_COEFF_ADDEND = 1.1
+        CONST_COEFF_MULTIPLIER = 2
+
+        return ((self.get_mean_speed() + CONST_COEFF_ADDEND)
+                * CONST_COEFF_MULTIPLIER
+                * self.weight)
 
 
-def read_package(workout_type: str, data: list) -> Training:
+def read_package(workout_type: str, data: List[int]) -> Training:
     """Прочитать данные полученные от датчиков."""
-    if(workout_type == 'SWM'):
-        return Swimming(*data)
-    elif(workout_type == 'RUN'):
-        return Running(*data)
-    elif(workout_type == 'WLK'):
-        return SportsWalking(*data)
+    training_dict = {
+        'SWM': Swimming,
+        'RUN': Running,
+        'WLK': SportsWalking}
+
+    if workout_type in training_dict.keys():
+        return training_dict[workout_type](*data)
+    else:
+        raise ValueError(f"Training type '{workout_type}' is not supported.")
 
 
 def main(training: Training) -> None:
