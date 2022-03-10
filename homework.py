@@ -21,8 +21,8 @@ class InfoMessage:
 
 class Training:
     """Базовый класс тренировки."""
-    LEN_STEP = 0.65
-    M_IN_KM = 1000
+    LEN_STEP: float = 0.65
+    M_IN_KM: int = 1000
 
     def __init__(self,
                  action: int,
@@ -43,7 +43,11 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        return 0.0
+        raise NotImplementedError(
+            'The abstract method get_spent_calories of the parent '
+            'Training class is used. Please use child classes of '
+            'the Training class or override the get_spent_calories method '
+            'in your child class.')
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -56,26 +60,24 @@ class Training:
 
 class Running(Training):
     """Тренировка: бег."""
-
-    def __init__(self,
-                 action: int,
-                 duration: float,
-                 weight: float
-                 ) -> None:
-        super().__init__(action, duration, weight)
+    MULTIPLIER: int = 18
+    DEDUCTIBLE: int = 20
+    MIN_IN_HOUR: int = 60
 
     def get_spent_calories(self) -> float:
-        CONST_COEFF_MULTIPLIER = 18
-        CONST_COEFF_DEDUCTIBLE = 20
-        MIN_IN_HOUR = 60
-
-        return ((CONST_COEFF_MULTIPLIER * self.get_mean_speed()
-                - CONST_COEFF_DEDUCTIBLE)
-                * self.weight) / self.M_IN_KM * self.duration * MIN_IN_HOUR
+        return (((self.MULTIPLIER * self.get_mean_speed()
+                - self.DEDUCTIBLE)
+                * self.weight)
+                / self.M_IN_KM
+                * self.duration
+                * self.MIN_IN_HOUR)
 
 
 class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
+    MULTIPLIER_WEIGHT: float = 0.035
+    MULTIPLIER_SPEED_HEIGHT: float = 0.029
+    MIN_IN_HOUR: int = 60
 
     def __init__(self,
                  action: int,
@@ -87,22 +89,21 @@ class SportsWalking(Training):
         self.height = height
 
     def get_spent_calories(self) -> float:
-        CONST_COEFF_MULTIPLIABLE = 0.035
-        CONST_COEFF_MULTIPLIER = 0.029
-        MIN_IN_HOUR = 60
 
-        return ((CONST_COEFF_MULTIPLIABLE
+        return ((self.MULTIPLIER_WEIGHT
                  * self.weight
                  + (self.get_mean_speed()**2 // self.height)
-                 * CONST_COEFF_MULTIPLIER
+                 * self.MULTIPLIER_SPEED_HEIGHT
                  * self.weight)
                 * self.duration
-                * MIN_IN_HOUR)
+                * self.MIN_IN_HOUR)
 
 
 class Swimming(Training):
     """Тренировка: плавание."""
-    LEN_STEP = 1.38
+    LEN_STEP: float = 1.38
+    ADDEND: float = 1.1
+    MULTIPLIER: int = 2
 
     def __init__(self,
                  action: int,
@@ -122,25 +123,24 @@ class Swimming(Training):
                 / self.duration)
 
     def get_spent_calories(self) -> float:
-        CONST_COEFF_ADDEND = 1.1
-        CONST_COEFF_MULTIPLIER = 2
 
-        return ((self.get_mean_speed() + CONST_COEFF_ADDEND)
-                * CONST_COEFF_MULTIPLIER
+        return ((self.get_mean_speed()
+                 + self.ADDEND)
+                * self.MULTIPLIER
                 * self.weight)
 
 
 def read_package(workout_type: str, data: List[int]) -> Training:
     """Прочитать данные полученные от датчиков."""
-    training_dict = {
+    workout_types = {
         'SWM': Swimming,
         'RUN': Running,
         'WLK': SportsWalking}
 
-    if workout_type in training_dict.keys():
-        return training_dict[workout_type](*data)
-    else:
-        raise ValueError(f"Training type '{workout_type}' is not supported.")
+    if workout_type in workout_types.keys():
+        return workout_types[workout_type](*data)
+
+    raise ValueError(f"Training type '{workout_type}' is not supported.")
 
 
 def main(training: Training) -> None:
@@ -156,6 +156,8 @@ if __name__ == '__main__':
         ('WLK', [9000, 1, 75, 180]),
     ]
 
+    test = Training(228, 2.4, 62.0)
+    test.get_spent_calories()
     for workout_type, data in packages:
         training = read_package(workout_type, data)
         main(training)
