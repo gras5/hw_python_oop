@@ -44,6 +44,7 @@ class Training:
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
         raise NotImplementedError(
+            f'Error in the "{self.__class__.__name__}" class:\n'
             'The abstract method get_spent_calories of the parent '
             'Training class is used. Please use child classes of '
             'the Training class or override the get_spent_calories method '
@@ -132,12 +133,12 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: List[int]) -> Training:
     """Прочитать данные полученные от датчиков."""
-    workout_types = {
+    workout_types: dict = {
         'SWM': Swimming,
         'RUN': Running,
         'WLK': SportsWalking}
 
-    if workout_type in workout_types.keys():
+    if workout_type in workout_types:
         return workout_types[workout_type](*data)
 
     raise ValueError(f"Training type '{workout_type}' is not supported.")
@@ -156,8 +157,6 @@ if __name__ == '__main__':
         ('WLK', [9000, 1, 75, 180]),
     ]
 
-    test = Training(228, 2.4, 62.0)
-    test.get_spent_calories()
     for workout_type, data in packages:
         training = read_package(workout_type, data)
         main(training)
