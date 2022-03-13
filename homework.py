@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Union
 
 
 @dataclass
@@ -44,7 +44,7 @@ class Training:
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
         raise NotImplementedError(
-            f'Error in the \'{self.__class__.__name__}\' class:\n'
+            f'''Error in the '{self.__class__.__name__}' class:\n'''
             'The abstract method get_spent_calories of the parent '
             'Training class is used. Please use child classes of '
             'the Training class or override the get_spent_calories method '
@@ -133,7 +133,7 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: List[int]) -> Training:
     """Прочитать данные полученные от датчиков."""
-    workout_types: Dict = {
+    workout_types: Dict[str, Union[Swimming, Running, SportsWalking]] = {
         'SWM': Swimming,
         'RUN': Running,
         'WLK': SportsWalking}
